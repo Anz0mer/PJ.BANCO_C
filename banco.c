@@ -25,6 +25,36 @@ int escolhaMenu(){
 }
 
 // Função que adicona um novo cliente.
+void novocliente() {
+    //Armazén dos dados do cliente.
+    FILE *conta = fopen("clientes.txt", "a");
+
+    char nome[100];
+    int cpf;
+    char conta1 [10];
+    float valor;
+    int senha;
+    int milhas = 0;
+
+    //Dados do novo cliente.
+    printf("Nome: ");
+    scanf("%s", nome);
+    printf("CPF: ");
+    scanf("%s", &cpf);
+    printf("Tipo de conta (comum ou plus): ");
+    scanf("%s", conta1);
+    printf("Valor incial da conta: R$");
+    scanf("%s", &valor);
+    printf("Senha do usuário: ");
+    scanf("%s", &senha);
+
+    //Armazenar os dados no arquivo.
+    fprintf(conta, "%s %d %s %.2f %d %d\n", nome, cpf, conta1, valor, senha, milhas);
+    fclose(conta);
+
+    printf("\n");
+    printf("Cliente cadastrado com sucesso!!\n");
+}
 
 // Função que apaga um cliente.
 
@@ -50,6 +80,8 @@ int main (){
         switch (escolha){
             case 1:
                 printf("Opção escolhida: Novo Cliente!\n");
+                printf("\n");
+                novocliente();
                 break;
 
             case 2:
