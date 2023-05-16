@@ -2,28 +2,41 @@
 #include <stdlib.h>
 #include <time.h>
 
-// Exibir menu
-
-void menu(){
-    printf("Digite o número da ação solicitada, sendo:\n");
+// Exibir menu.
+void menu() {
+    printf("Digite o número da ação solicitada:\n");
     printf("1 - Novo Cliente\n");
-    printf("2 - Apaga Cliente\n");
+    printf("2 - Apagar Cliente\n");
     printf("3 - Débito\n");
     printf("4 - Depósito\n");
     printf("5 - Extrato\n");
     printf("6 - Transferência entre contas\n");
     printf("7 - Conversão em Milhas\n");
     printf("0 - Sair\n");
+    printf("\n");
 }
 
 // Leitura da escolha do menu.
-
 int escolhaMenu(){
     int x;
     printf("Digite sua escolha: ");
     scanf("%d", &x);
     return x;
 }
+
+// Função que adicona um novo cliente.
+
+// Função que apaga um cliente.
+
+// Função que realiza o débito.
+
+// Função que realiza o depósito.
+
+// Função que mostra o extrato.
+
+// Função que realiza as tranferências.
+
+// Função que realiza a conversão.
 
 // Execução do menu.
 int main (){
@@ -67,7 +80,7 @@ int main (){
                 printf("Opção escolhida: Sair!\n");
                 break;
 
-            // se o usuário escolher uma opção inválida, ou seja, um valor diferente de 0 a 7, será acionado a mensagem do printf.
+            // Se o usuário escolher uma opção inválida, ou seja, um valor diferente de 0 a 7, será acionado a mensagem do printf.
             default: 
                 printf("Opção Inválida! Por favor, escolha novamente.\n");
                 break;
