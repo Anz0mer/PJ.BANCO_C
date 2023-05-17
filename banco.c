@@ -1,8 +1,10 @@
+//Blibliotas que serão utilizadas
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
-// Exibir menu.
+//Exibir menu
 void menu() {
     printf("Digite o número da ação solicitada:\n");
     printf("1 - Novo Cliente\n");
@@ -16,7 +18,7 @@ void menu() {
     printf("\n");
 }
 
-// Leitura da escolha do menu.
+//Leitura da escolha do menu.
 int escolhaMenu(){
     int x;
     printf("Digite sua escolha: ");
@@ -24,7 +26,7 @@ int escolhaMenu(){
     return x;
 }
 
-// Função que adicona um novo cliente.
+//Função que adicona um novo cliente.
 void novocliente() {
     //Armazén dos dados do cliente.
     FILE *conta = fopen("clientes.txt", "a");
@@ -56,19 +58,78 @@ void novocliente() {
     printf("Cliente cadastrado com sucesso!!\n");
 }
 
-// Função que apaga um cliente.
+//Função que apaga um cliente.
+void apagacliente(){
+    int cpf;
+    int senha;
+    printf("CPF: ");
+    scanf("%d", &cpf);
+    printf("Senha: ");
+    scanf("%d", &senha);
 
-// Função que realiza o débito.
+    FILE *f = fopen("clientes.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
 
-// Função que realiza o depósito.
+    if (f == NULL || temp == NULL){
+        printf("Erro ao abrir o arquivo!!\n");
+        return;
+    }
 
-// Função que mostra o extrato.
+    char linha[100];
+    while (fgets(linha, sizeof(linha), f)) {
+        int cpf_arquivo;
+        sscanf(linha, "%*s %d", &cpf_arquivo);
+        //Verifica se o CPF é diferente do CPF fornecido
+        if(cpf_arquivo != cpf) {
+            //Escreve a linha atual no arquivo temporário
+            fputs(linha, temp);
+        }
+    }
 
-// Função que realiza as tranferências.
+    fclose(f);
+    fclose(temp);
+    
+    //Remove o arquivo "clientes.txt"
+    if (remove("clientes.txt") != 0) {
+        printf("Erro ao apagar o arquivo!\n");
+        return;
+    }
 
-// Função que realiza a conversão.
+    printf("Conta Apagada!!\n");
+}
 
-// Execução do menu.
+//Função que realiza o débito.
+void debito() {
+    int cpf, senha;
+    float valor;
+    printf("CPF: ");
+    scanf("%d", &cpf);
+    printf("Senha: ");
+    scanf("%d", &senha);
+    printf("Qual valor deseja debitar?: ");
+    scanf("%f", &valor);
+
+    //Calcula a tarifa 1 (5% do valor a ser debitado)
+    float tarifa1 = valor * 0.05;
+
+    //Calcula a tarifa 2 (3% do valor a ser debitado)
+    float tarifa2 = valor * 0.03;
+
+    FILE *f = fopen("clientes.txt", "r+");
+    if (f == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+}
+//Função que realiza o depósito.
+
+//Função que mostra o extrato.
+
+//Função que realiza as tranferências.
+
+//Função que realiza a conversão.
+
+//Execução do menu.
 int main (){
     int escolha;
 
@@ -76,7 +137,7 @@ int main (){
         menu();
         escolha = escolhaMenu();
 
-        // Executar menu com base na escolha do usuário.
+        //Executar menu com base na escolha do usuário.
         switch (escolha){
             case 1:
                 printf("Opção escolhida: Novo Cliente!\n");
@@ -86,10 +147,14 @@ int main (){
 
             case 2:
                 printf("Opção escolhida: Apaga Cliente! \n");
+                printf("\n");
+                apagacliente();
                 break;
 
             case 3:
                 printf("Opção escolhida: Débito!\n");
+                printf("\n");
+                debito();
                 break;
 
             case 4:
