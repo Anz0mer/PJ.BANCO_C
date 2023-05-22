@@ -4,6 +4,16 @@
 #include <string.h>
 #include <time.h>
 
+// Estrutura para armazenar os dados do cliente
+typedef struct {
+    char nome[100];
+    int cpf;
+    char tipoConta[10];
+    float saldo;
+    int senha;
+    int milhas;
+} Cliente;
+
 //Exibir menu
 void menu() {
     printf("Digite o número da ação solicitada:\n");
@@ -28,30 +38,26 @@ int escolhaMenu(){
 
 //Função que adicona um novo cliente.
 void novocliente() {
-    //Armazén dos dados do cliente.
     FILE *conta = fopen("clientes.txt", "a");
+    if (conta == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
 
-    char nome[100];
-    int cpf;
-    char conta1 [10];
-    float valor;
-    int senha;
-    int milhas = 0;
-
-    //Dados do novo cliente.
+    Cliente cliente;
     printf("Nome: ");
-    scanf("%s", nome);
+    scanf("%s", cliente.nome);
     printf("CPF: ");
-    scanf("%s", &cpf);
+    scanf("%d", &cliente.cpf);
     printf("Tipo de conta (comum ou plus): ");
-    scanf("%s", conta1);
-    printf("Valor incial da conta: R$");
-    scanf("%s", &valor);
+    scanf("%s", cliente.tipoConta);
+    printf("Valor inicial da conta: R$");
+    scanf("%f", &cliente.saldo);
     printf("Senha do usuário: ");
-    scanf("%s", &senha);
+    scanf("%d", &cliente.senha);
+    cliente.milhas = 0;
 
-    //Armazenar os dados no arquivo.
-    fprintf(conta, "%s %d %s %.2f %d %d\n", nome, cpf, conta1, valor, senha, milhas);
+    fprintf(conta, "%s %d %s %.2f %d %d\n", cliente.nome, cliente.cpf, cliente.tipoConta, cliente.saldo, cliente.senha, cliente.milhas);
     fclose(conta);
 
     printf("\n");
@@ -109,18 +115,56 @@ void debito() {
     printf("Qual valor deseja debitar?: ");
     scanf("%f", &valor);
 
-    //Calcula a tarifa 1 (5% do valor a ser debitado)
-    float tarifa1 = valor * 0.05;
-
-    //Calcula a tarifa 2 (3% do valor a ser debitado)
-    float tarifa2 = valor * 0.03;
+    float tarifa;
 
     FILE *f = fopen("clientes.txt", "r+");
     if (f == NULL) {
-        printf("Erro ao abrir o arquivo!\n");
+        printf("Erro ao abrir o arquivo.\n");
         return;
     }
+
+    Cliente cliente;
+    int encontrado = 0;
+    while (fscanf(f, "%s %d %s %f %d %d", cliente.nome, &cliente.cpf, cliente.tipoConta, &cliente.saldo, &cliente.senha, &cliente.milhas) != EOF) {
+        if (cliente.cpf == cpf && cliente.senha == senha) {
+            encontrado = 1;
+            if (strcmp(cliente.tipoConta, "comum") == 0) {
+                tarifa = valor * 0.05;
+                if (cliente.saldo >= -1000) {
+                    cliente.saldo -= valor + tarifa;
+                    printf("Novo saldo: R$%.2f\n", cliente.saldo);
+                } else {
+                    printf("Saldo insuficiente!\n");
+                    fclose(f);
+                    return;
+                }
+            } else if (strcmp(cliente.tipoConta, "plus") == 0) {
+                tarifa = valor * 0.03;
+                if (cliente.saldo >= -5000) {
+                    cliente.saldo -= valor + tarifa;
+                    printf("Novo saldo: R$%.2f\n", cliente.saldo);
+                } else {
+                    printf("Saldo insuficiente!\n");
+                    fclose(f);
+                    return;
+                }
+            }
+
+            fseek(f, -sizeof(Cliente), SEEK_CUR);
+            fprintf(f, "%s %d %s %.2f %d %d\n", cliente.nome, cliente.cpf, cliente.tipoConta, cliente.saldo, cliente.senha, cliente.milhas);
+            break;
+        }
+    }
+
+    fclose(f);
+
+    if (encontrado) {
+        printf("Débito realizado!\n");
+    } else {
+        printf("Cliente não encontrado!\n");
+    }
 }
+
 //Função que realiza o depósito.
 
 //Função que mostra o extrato.
