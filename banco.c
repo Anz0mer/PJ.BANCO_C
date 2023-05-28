@@ -1,9 +1,9 @@
-//Bibliotecas que serão utilizadas.
+// Bibliotecas que serão utilizadas.
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
 
-//Exibir menu.
+// Exibir menu.
 void menu() {
   printf("Digite o número da ação solicitada:\n");
   printf("1 - Novo Cliente\n");
@@ -17,7 +17,7 @@ void menu() {
   printf("\n");
 }
 
-//Leitura da escolha do menu.
+// Leitura da escolha do menu.
 int escolhaMenu() {
   int escolha;
   printf("Digite sua escolha: ");
@@ -25,7 +25,7 @@ int escolhaMenu() {
   return escolha;
 }
 
-//Função que adiciona um novo cliente.
+// Função que adiciona um novo cliente.
 void novocliente() {
   FILE *conta = fopen("clientes.txt", "a");
   if (conta == NULL) {
@@ -60,7 +60,7 @@ void novocliente() {
   printf("Cliente cadastrado com sucesso!!\n");
 }
 
-//Função que apaga um cliente.
+// Função que apaga um cliente.
 void apagacliente() {
   int cpf;
   int senha;
@@ -78,12 +78,28 @@ void apagacliente() {
   }
 
   char linha[100];
+  // Variável de controle para verificar se o CPF foi encontrado
+  int cpfEncontrado = 0;
+
   while (fgets(linha, sizeof(linha), f)) {
     int cpf_arquivo;
     sscanf(linha, "%*s %d", &cpf_arquivo);
-      //Verifica se o CPF é diferente do CPF fornecido.
-    if (cpf_arquivo != cpf) {
-      //Escreve a linha atual no arquivo temporário.
+
+    // Verifica se o CPF é igual ao CPF fornecido e se a senha está correta.
+    if (cpf_arquivo == cpf) {
+      cpfEncontrado = 1;
+      // Verifica se a senha está correta
+      int senha_arquivo;
+      sscanf(linha, "%*s %*d %*s %*f %d", &senha_arquivo);
+      if (senha_arquivo != senha) {
+        printf("Erro!\n");
+        fclose(f);
+        fclose(temp);
+        remove("temp.txt");
+        return;
+      }
+    } else {
+      // Escreve a linha atual no arquivo temporário.
       fputs(linha, temp);
     }
   }
@@ -91,7 +107,12 @@ void apagacliente() {
   fclose(f);
   fclose(temp);
 
-  //Remove o arquivo "clientes.txt"
+  if (!cpfEncontrado) {
+    printf("CPF não encontrado!\n");
+    remove("temp.txt");
+    return;
+  }
+
   if (remove("clientes.txt") != 0) {
     printf("Erro ao apagar o arquivo!\n");
     return;
@@ -105,7 +126,7 @@ void apagacliente() {
   printf("Conta Apagada!!\n");
 }
 
-//Função que realiza o débito.
+// Função que realiza o débito.
 void debito() {
   int cpf;
   int senha;
@@ -176,23 +197,107 @@ void debito() {
   }
 }
 
-//Função que realiza o depósito.
+// Função que realiza o depósito.
+void deposito() {
+  int cpf3;
+  int senha;
+  float valor3;
+  float saldo = 0;
+  char linha[100];
+  char cpf_str[12];
+  FILE *clientes;
+  FILE *extrato;
+  time_t agora;
+  struct tm *data_hora;
+  char data_hora_str[20];
+  int encontrado = 0;
 
-//Função que mostra o extrato.
+  printf("CPF: ");
+  scanf("%d", &cpf3);
+  printf("Qual o valor que deseja depositar? R$ ");
+  scanf("%f", &valor3);
 
-//Função que realiza as transferências.
+  snprintf(cpf_str, sizeof(cpf_str), "%d", cpf3);
 
-//Função que realiza a conversão de milhas.
+  clientes = fopen("clientes.txt", "r+");
+  if (clientes == NULL) {
+    printf("Erro ao abrir o arquivo clientes.txt\n");
+    return;
+  }
 
-//Execução do menu.
+  while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    int cpf_arquivo;
+    char nome[100];
+    char tipoConta[10];
+    float saldo_arquivo;
+    int senha_arquivo;
+    int milhas;
+
+    sscanf(linha, "%s %d %s %f %d %d", nome, &cpf_arquivo, tipoConta,
+           &saldo_arquivo, &senha_arquivo, &milhas);
+
+    if (cpf_arquivo == cpf3) {
+      printf("Senha: ");
+      scanf("%d", &senha);
+      if (senha != senha_arquivo) {
+        printf("Erro!\n");
+        fclose(clientes);
+        return;
+      }
+
+      saldo_arquivo += valor3;
+      saldo = saldo_arquivo;
+
+      fseek(clientes, -(strlen(linha)), SEEK_CUR);
+      fprintf(clientes, "%s %d %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
+              saldo_arquivo, senha_arquivo, milhas);
+
+      agora = time(NULL);
+      data_hora = localtime(&agora);
+      strftime(data_hora_str, sizeof(data_hora_str), "%d/%m/%Y %H:%M:%S",
+               data_hora);
+
+      extrato = fopen("extrato.txt", "a");
+      if (extrato == NULL) {
+        printf("Erro ao abrir o arquivo extrato.txt\n");
+        fclose(clientes);
+        return;
+      }
+
+      fprintf(extrato, "%d Data: %s %.2f Tarifa: 0 Saldo: %.2f\n", cpf3,
+              data_hora_str, valor3, saldo);
+
+      fclose(extrato);
+      encontrado = 1;
+      break;
+    }
+  }
+
+  fclose(clientes);
+
+  if (!encontrado) {
+    printf("CPF não encontrado!\n");
+    return;
+  }
+
+  printf("Depósito realizado!\n");
+}
+
+// Função que mostra o extrato.
+
+// Função que realiza as transferências.
+
+// Função que realiza a conversão de milhas.
+
+// Execução do menu.
 int main() {
   int escolha;
 
   do {
     menu();
     escolha = escolhaMenu();
-     
-    //Executar o menu com base na escolha do usuário
+
+    // Executar o menu com base na escolha do usuário
     switch (escolha) {
     case 1:
       printf("Opção escolhida: Novo Cliente!\n");
@@ -215,19 +320,23 @@ int main() {
     case 4:
       printf("Opção escolhida: Depósito!\n");
       printf("\n");
+      deposito();
       break;
 
     case 5:
       printf("Opção escolhida: Extrato!\n");
       printf("\n");
+      //extrato();
       break;
 
     case 6:
       printf("Opção escolhida: Transferência entre contas!\n");
+      //tranferencia();
       break;
 
     case 7:
       printf("Opção escolhida: Conversão entre milhas!\n");
+      //milhas();
       printf("\n");
       break;
 
@@ -236,7 +345,8 @@ int main() {
       printf("\n");
       break;
 
-    // Se o usuário escolher uma opção inválida, ou seja, um valor diferente de 0 a 7, será acionado a mensagem do printf.
+    // Se o usuário escolher uma opção inválida, ou seja, um valor diferente de
+    // 0 a 7, será acionado a mensagem do printf.
     default:
       printf("Opção Inválida! Por favor, escolha novamente.\n");
       printf("\n");
