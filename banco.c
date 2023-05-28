@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 // Exibir menu.
 void menu() {
@@ -284,10 +285,162 @@ void deposito() {
 }
 
 // Função que mostra o extrato.
+void extrato() {
+  int cpf4;
+  int senha4;
+  char linha[100];
+  FILE *clientes;
+  FILE *extrato;
+
+  printf("CPF: ");
+  scanf("%d", &cpf4);
+  printf("Senha: ");
+  scanf("%d", &senha4);
+
+  clientes = fopen("clientes.txt", "r");
+  if (clientes == NULL) {
+    printf("Erro ao abrir o arquivo clientes.txt\n");
+    return;
+  }
+
+  int encontrado = 0;
+
+  while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    int cpf_arquivo;
+    char nome[100];
+    char tipoConta[10];
+    float saldo;
+    int senha_arquivo;
+    int milhas;
+
+    sscanf(linha, "%s %d %s %f %d %d", nome, &cpf_arquivo, tipoConta, &saldo,
+           &senha_arquivo, &milhas);
+
+    if (cpf_arquivo == cpf4 && senha_arquivo == senha4) {
+      encontrado = 1;
+      extrato = fopen("extrato.txt", "r");
+      if (extrato == NULL) {
+        printf("Erro ao abrir o arquivo extrato.txt\n");
+        fclose(clientes);
+        return;
+      }
+
+      while (fgets(linha, sizeof(linha), extrato) != NULL) {
+        int extrato_cpf;
+        char texto[100];
+
+        sscanf(linha, "%d %[^\n]", &extrato_cpf, texto);
+
+        if (cpf4 == extrato_cpf) {
+          printf("%s\n", texto);
+        }
+      }
+
+      fclose(extrato);
+      break;
+    }
+  }
+
+  fclose(clientes);
+
+  if (!encontrado) {
+    printf("CPF não encontrado!\n");
+  }
+}
 
 // Função que realiza as transferências.
 
 // Função que realiza a conversão de milhas.
+void milhas() {
+  int cpf7;
+  int senha6;
+  float valor6;
+  float milhas;
+  char linha[100];
+  char cpf_str[12];
+  FILE *clientes;
+  FILE *extrato;
+  time_t agora;
+  struct tm *data_hora;
+  char data_hora_str[20];
+
+  printf("CPF: ");
+  scanf("%d", &cpf7);
+  printf("Senha: ");
+  scanf("%d", &senha6);
+  printf("Digite o valor que deseja converter: R$ ");
+  scanf("%f", &valor6);
+
+  milhas = valor6 * 0.3;
+
+  snprintf(cpf_str, sizeof(cpf_str), "%d", cpf7);
+
+  clientes = fopen("clientes.txt", "r");
+  if (clientes == NULL) {
+    printf("Erro ao abrir o arquivo clientes.txt\n");
+    return;
+  }
+
+  FILE *temp = fopen("temp.txt", "w"); // Arquivo temporário
+
+  int encontrado = 0;
+  float saldo_atualizado = 0;
+
+  while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    int cpf_arquivo;
+    char nome[100];
+    char tipoConta[10];
+    float saldo;
+    int senha_arquivo;
+    float milhas_arquivo;
+
+    sscanf(linha, "%s %d %s %f %d %f", nome, &cpf_arquivo, tipoConta, &saldo,
+           &senha_arquivo, &milhas_arquivo);
+
+    if (cpf_arquivo == cpf7 && senha_arquivo == senha6) {
+      encontrado = 1;
+      saldo_atualizado = saldo - valor6;
+      milhas_arquivo += milhas;
+
+      fprintf(temp, "%s %d %s %.2f %d %.2f\n", nome, cpf_arquivo, tipoConta,
+              saldo_atualizado, senha_arquivo, milhas_arquivo);
+
+      agora = time(NULL);
+      data_hora = localtime(&agora);
+      strftime(data_hora_str, sizeof(data_hora_str), "%d/%m/%Y %H:%M:%S",
+               data_hora);
+
+      extrato = fopen("extrato.txt", "a");
+      if (extrato == NULL) {
+        printf("Erro ao abrir o arquivo extrato.txt\n");
+        fclose(clientes);
+        fclose(temp);
+        return;
+      }
+
+      fprintf(extrato, "%d Data: %s %.2f Tarifa: 0 Saldo: %.2f\n", cpf7,
+              data_hora_str, valor6, saldo_atualizado);
+
+      fclose(extrato);
+    } else {
+      fputs(linha, temp); // Copiar linha para o arquivo temporário
+    }
+  }
+
+  fclose(clientes);
+  fclose(temp);
+
+  if (!encontrado) {
+    printf("CPF não encontrado!\n");
+    remove("temp.txt"); // Remover arquivo temporário
+    return;
+  }
+
+  remove("clientes.txt");             // Remover arquivo original
+  rename("temp.txt", "clientes.txt"); // Renomear arquivo temporário
+
+  printf("Conversão Realizada!\n");
+}
 
 // Execução do menu.
 int main() {
@@ -326,17 +479,17 @@ int main() {
     case 5:
       printf("Opção escolhida: Extrato!\n");
       printf("\n");
-      //extrato();
+      extrato();
       break;
 
     case 6:
       printf("Opção escolhida: Transferência entre contas!\n");
-      //tranferencia();
+      // tranferencia();
       break;
 
     case 7:
       printf("Opção escolhida: Conversão entre milhas!\n");
-      //milhas();
+      milhas();
       printf("\n");
       break;
 
