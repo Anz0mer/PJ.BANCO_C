@@ -1,8 +1,8 @@
 // Bibliotecas que serão utilizadas.
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <stdlib.h>
 
 // Exibir menu.
 void menu() {
@@ -349,6 +349,93 @@ void extrato() {
 }
 
 // Função que realiza as transferências.
+void transferencia() {
+  int cpf5;
+  int senha5;
+  int cpf6;
+  float valor5;
+  char linha[100];
+  char cpf_str[12];
+  FILE *clientes;
+  FILE *extrato;
+  time_t agora;
+  struct tm *data_hora;
+  char data_hora_str[20];
+
+  printf("CPF (Origem): ");
+  scanf("%d", &cpf5);
+  printf("Senha (Origem): ");
+  scanf("%d", &senha5);
+  printf("CPF (Destino): ");
+  scanf("%d", &cpf6);
+  printf("Qual o valor da transferência?: ");
+  scanf("%f", &valor5);
+
+  clientes = fopen("clientes.txt", "r+");
+  if (clientes == NULL) {
+    printf("Erro ao abrir o arquivo clientes.txt\n");
+    return;
+  }
+
+  int encontrado1 = 0;
+  int encontrado2 = 0;
+  float saldo_origem_atualizado = 0;
+  float saldo_destino_atualizado = 0;
+
+  while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    int cpf_arquivo;
+    char nome[100];
+    char tipoConta[10];
+    float saldo;
+    int senha_arquivo;
+    float milhas;
+
+    sscanf(linha, "%s %d %s %f %d %f", nome, &cpf_arquivo, tipoConta, &saldo,
+           &senha_arquivo, &milhas);
+
+    if (cpf_arquivo == cpf5 && senha_arquivo == senha5) {
+      encontrado1 = 1;
+      saldo_origem_atualizado = saldo - valor5;
+
+      fseek(clientes, -(strlen(linha)), SEEK_CUR);
+      fprintf(clientes, "%s %d %s %.2f %d %.2f\n", nome, cpf_arquivo, tipoConta,
+              saldo_origem_atualizado, senha_arquivo, milhas);
+
+      agora = time(NULL);
+      data_hora = localtime(&agora);
+      strftime(data_hora_str, sizeof(data_hora_str), "%d/%m/%Y %H:%M:%S",
+               data_hora);
+
+      extrato = fopen("extrato.txt", "a");
+      if (extrato == NULL) {
+        printf("Erro ao abrir o arquivo extrato.txt\n");
+        fclose(clientes);
+        return;
+      }
+
+      fprintf(extrato, "%d Data: %s %.2f Tarifa: 0 Saldo: %.2f\n", cpf5,
+              data_hora_str, valor5, saldo_origem_atualizado);
+
+      fclose(extrato);
+    } else if (cpf_arquivo == cpf6) {
+      encontrado2 = 1;
+      saldo_destino_atualizado = saldo + valor5;
+
+      fseek(clientes, -(strlen(linha)), SEEK_CUR);
+      fprintf(clientes, "%s %d %s %.2f %d %.2f\n", nome, cpf_arquivo, tipoConta,
+              saldo_destino_atualizado, senha_arquivo, milhas);
+    }
+  }
+
+  fclose(clientes);
+
+  if (!encontrado1 || !encontrado2) {
+    printf("Erro!\n");
+    return;
+  }
+
+  printf("Transferência Realizada!\n");
+}
 
 // Função que realiza a conversão de milhas.
 void milhas() {
@@ -484,7 +571,7 @@ int main() {
 
     case 6:
       printf("Opção escolhida: Transferência entre contas!\n");
-      // tranferencia();
+        transferencia();
       break;
 
     case 7:
