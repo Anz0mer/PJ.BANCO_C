@@ -35,7 +35,7 @@ void novocliente() {
   }
 
   char nome[100];
-  int cpf;
+  long long cpf; // Alterado o tipo para long long
   char tipoConta[10];
   float saldo;
   int senha;
@@ -44,7 +44,7 @@ void novocliente() {
   printf("Nome: ");
   scanf("%s", nome);
   printf("CPF: ");
-  scanf("%d", &cpf);
+  scanf("%lld", &cpf); // Utilizado o especificador %lld para ler o CPF
   printf("Tipo de conta (comum ou plus): ");
   scanf("%s", tipoConta);
   printf("Valor inicial da conta: R$");
@@ -53,7 +53,7 @@ void novocliente() {
   scanf("%d", &senha);
   milhas = 0;
 
-  fprintf(conta, "%s %d %s %.2f %d %d\n", nome, cpf, tipoConta, saldo, senha,
+  fprintf(conta, "%s %lld %s %.2f %d %d\n", nome, cpf, tipoConta, saldo, senha,
           milhas);
   fclose(conta);
 
@@ -129,11 +129,11 @@ void apagacliente() {
 
 // Função que realiza o débito.
 void debito() {
-  int cpf;
+  long long cpf;
   int senha;
   float valor;
   printf("CPF: ");
-  scanf("%d", &cpf);
+  scanf("%lld", &cpf);
   printf("Senha: ");
   scanf("%d", &senha);
   printf("Qual valor deseja debitar? R$ ");
@@ -152,7 +152,7 @@ void debito() {
     return;
   }
 
-  int cpf_arquivo;
+  long long cpf_arquivo; 
   char nome[100];
   char tipoConta[10];
   float saldo;
@@ -161,7 +161,7 @@ void debito() {
 
   int encontrou = 0;
 
-  while (fscanf(f, "%s %d %s %f %d %d", nome, &cpf_arquivo, tipoConta, &saldo,
+  while (fscanf(f, "%s %lld %s %f %d %d", nome, &cpf_arquivo, tipoConta, &saldo,
                 &senha_arquivo, &milhas) == 6) {
     if (cpf_arquivo == cpf && senha_arquivo == senha) {
       encontrou = 1;
@@ -169,12 +169,12 @@ void debito() {
         printf("Saldo insuficiente para realizar o débito!\n");
       } else {
         saldo -= valor;
-        fprintf(temp, "%s %d %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
+        fprintf(temp, "%s %lld %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
                 saldo, senha_arquivo, milhas);
         printf("Débito realizado!\n");
       }
     } else {
-      fprintf(temp, "%s %d %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
+      fprintf(temp, "%s %lld %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
               saldo, senha_arquivo, milhas);
     }
   }
@@ -200,7 +200,7 @@ void debito() {
 
 // Função que realiza o depósito.
 void deposito() {
-  int cpf3;
+  long long cpf3; 
   int senha;
   float valor3;
   float saldo = 0;
@@ -214,11 +214,11 @@ void deposito() {
   int encontrado = 0;
 
   printf("CPF: ");
-  scanf("%d", &cpf3);
+  scanf("%lld", &cpf3); 
   printf("Qual o valor que deseja depositar? R$ ");
   scanf("%f", &valor3);
 
-  snprintf(cpf_str, sizeof(cpf_str), "%d", cpf3);
+  snprintf(cpf_str, sizeof(cpf_str), "%lld", cpf3);
 
   clientes = fopen("clientes.txt", "r+");
   if (clientes == NULL) {
@@ -227,14 +227,14 @@ void deposito() {
   }
 
   while (fgets(linha, sizeof(linha), clientes) != NULL) {
-    int cpf_arquivo;
+    long long cpf_arquivo; 
     char nome[100];
     char tipoConta[10];
     float saldo_arquivo;
     int senha_arquivo;
     int milhas;
 
-    sscanf(linha, "%s %d %s %f %d %d", nome, &cpf_arquivo, tipoConta,
+    sscanf(linha, "%s %lld %s %f %d %d", nome, &cpf_arquivo, tipoConta,
            &saldo_arquivo, &senha_arquivo, &milhas);
 
     if (cpf_arquivo == cpf3) {
@@ -250,9 +250,8 @@ void deposito() {
       saldo = saldo_arquivo;
 
       fseek(clientes, -(strlen(linha)), SEEK_CUR);
-      fprintf(clientes, "%s %d %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
+      fprintf(clientes, "%s %lld %s %.2f %d %d\n", nome, cpf_arquivo, tipoConta,
               saldo_arquivo, senha_arquivo, milhas);
-
       agora = time(NULL);
       data_hora = localtime(&agora);
       strftime(data_hora_str, sizeof(data_hora_str), "%d/%m/%Y %H:%M:%S",
@@ -265,8 +264,7 @@ void deposito() {
         return;
       }
 
-      fprintf(extrato, "%d Data: %s %.2f Tarifa: 0 Saldo: %.2f\n", cpf3,
-              data_hora_str, valor3, saldo);
+      fprintf(extrato, "%lld Data: %s %.2f Tarifa: 0 Saldo: %.2f\n", cpf3, data_hora_str, valor3, saldo);
 
       fclose(extrato);
       encontrado = 1;
@@ -381,8 +379,11 @@ void transferencia() {
   int encontrado2 = 0;
   float saldo_origem_atualizado = 0;
   float saldo_destino_atualizado = 0;
+  long ftell_offset = 0;
+  long ftell_offset_previous = 0;
 
   while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    ftell_offset_previous = ftell_offset;
     int cpf_arquivo;
     char nome[100];
     char tipoConta[10];
@@ -397,7 +398,7 @@ void transferencia() {
       encontrado1 = 1;
       saldo_origem_atualizado = saldo - valor5;
 
-      fseek(clientes, -(strlen(linha)), SEEK_CUR);
+      fseek(clientes, ftell_offset_previous, SEEK_SET);
       fprintf(clientes, "%s %d %s %.2f %d %.2f\n", nome, cpf_arquivo, tipoConta,
               saldo_origem_atualizado, senha_arquivo, milhas);
 
@@ -417,20 +418,42 @@ void transferencia() {
               data_hora_str, valor5, saldo_origem_atualizado);
 
       fclose(extrato);
-    } else if (cpf_arquivo == cpf6) {
+    }
+
+    ftell_offset = ftell(clientes);
+  }
+
+  fseek(clientes, ftell_offset_previous, SEEK_SET);
+
+  while (fgets(linha, sizeof(linha), clientes) != NULL) {
+    int cpf_arquivo;
+    char nome[100];
+    char tipoConta[10];
+    float saldo;
+    int senha_arquivo;
+    float milhas;
+
+    sscanf(linha, "%s %d %s %f %d %f", nome, &cpf_arquivo, tipoConta, &saldo,
+           &senha_arquivo, &milhas);
+
+    if (cpf_arquivo == cpf6) {
       encontrado2 = 1;
       saldo_destino_atualizado = saldo + valor5;
 
-      fseek(clientes, -(strlen(linha)), SEEK_CUR);
+      fseek(clientes, ftell_offset_previous, SEEK_SET);
       fprintf(clientes, "%s %d %s %.2f %d %.2f\n", nome, cpf_arquivo, tipoConta,
               saldo_destino_atualizado, senha_arquivo, milhas);
+      break;
     }
+
+    ftell_offset_previous = ftell_offset;
+    ftell_offset = ftell(clientes);
   }
 
   fclose(clientes);
 
   if (!encontrado1 || !encontrado2) {
-    printf("Erro!\n");
+    printf("CPF não encontrado!\n");
     return;
   }
 
@@ -468,7 +491,7 @@ void milhas() {
     return;
   }
 
-  FILE *temp = fopen("temp.txt", "w"); // Arquivo temporário
+  FILE *temp = fopen("temp.txt", "w"); 
 
   int encontrado = 0;
   float saldo_atualizado = 0;
@@ -510,7 +533,7 @@ void milhas() {
 
       fclose(extrato);
     } else {
-      fputs(linha, temp); // Copiar linha para o arquivo temporário
+      fputs(linha, temp);
     }
   }
 
@@ -519,13 +542,12 @@ void milhas() {
 
   if (!encontrado) {
     printf("CPF não encontrado!\n");
-    remove("temp.txt"); // Remover arquivo temporário
+    remove("temp.txt"); 
     return;
   }
 
-  remove("clientes.txt");             // Remover arquivo original
-  rename("temp.txt", "clientes.txt"); // Renomear arquivo temporário
-
+  remove("clientes.txt");             
+  rename("temp.txt", "clientes.txt"); 
   printf("Conversão Realizada!\n");
 }
 
@@ -571,7 +593,7 @@ int main() {
 
     case 6:
       printf("Opção escolhida: Transferência entre contas!\n");
-        transferencia();
+      transferencia();
       break;
 
     case 7:
